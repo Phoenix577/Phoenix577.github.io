@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azeem's Terminal</title>
+    <style>
+        /* --- Basic Styles --- */
+        body {
+            background-color: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #terminal {
+            height: 100vh;
+            overflow-y: auto;
+            padding-bottom: 50px;
+        }
+
+        .output-line {
+            white-space: pre-wrap; /* Allows text to wrap */
+        }
+
+        /* --- Input Line Styles --- */
+        .input-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .prompt {
+            margin-right: 10px;
+        }
+
+        #command-input {
+            background: none;
+            border: none;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 100%;
+        }
+
+        /* --- Blinking Cursor --- */
+        #command-input:focus {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { border-right: 2px solid #00ff00; }
+            50% { border-right: 2px solid transparent; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <div class="output-line">Welcome to Azeem's Interactive Terminal.</div>
+        <div class="output-line">Type 'help' to see the list of available commands.</div>
+        <div class="output-line">----------------------------------------------------</div>
+    </div>
+    
+    <div class="input-line">
+        <span class="prompt">></span>
+        <input type="text" id="command-input" autofocus autocomplete="off">
+    </div>
+
+    <script>
+        const terminalOutput = document.getElementById('terminal');
+        const commandInput = document.getElementById('command-input');
+
+        // --- EDIT YOUR COMMANDS AND OUTPUTS HERE ---
+        const commands = {
+            help: `
+Available commands:
+  about    - Who is Azeem?
+  projects - View my work
+  socials  - My social media links
+  clear    - Clear the terminal
+            `,
+            about: "I'm Azeem, a passionate developer interested in Python, Linux, and cybersecurity. I love building cool things and learning new technologies.",
+            projects: `
+My Projects:
+  1. Project Alpha - A data analysis tool built with Python. [link]
+  2. Cool Website  - A portfolio website for a client. [link]
+  (You can add links here!)
+            `,
+            socials: `
+You can find me here:
+  GitHub:   https://github.com/Phoenix577  <-- I've updated this for you!
+  LinkedIn: https://linkedin.com/in/your-profile
+  Twitter:  https://twitter.com/your-handle
+            `
+        };
+
+        // --- CORE LOGIC (No need to edit below this line) ---
+        commandInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const command = commandInput.value.trim().toLowerCase();
+                const currentLine = `<div class="output-line"><span class="prompt">></span> ${command}</div>`;
+                
+                terminalOutput.innerHTML += currentLine;
+
+                if (command in commands) {
+                    const output = `<div class="output-line">${commands[command]}</div>`;
+                    terminalOutput.innerHTML += output;
+                } else if (command === 'clear') {
+                    terminalOutput.innerHTML = `<div class="output-line">Terminal cleared. Type 'help' for commands.</div>`;
+                } else {
+                    const error = `<div class="output-line">Command not found: ${command}. Type 'help' for a list of commands.</div>`;
+                    terminalOutput.innerHTML += error;
+                }
+
+                commandInput.value = '';
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        });
+
+        document.body.addEventListener('click', () => commandInput.focus());
+    </script>
+</body>
+</html>
