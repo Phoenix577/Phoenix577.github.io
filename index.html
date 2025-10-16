@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azeem's Terminal</title>
     <style>
-        /* --- Basic Styles --- */
+        /* --- Basic Styles (No changes here) --- */
         body {
             background-color: #1a1a1a;
             color: #00ff00;
@@ -22,33 +22,18 @@
         }
 
         .output-line {
-            white-space: pre-wrap; /* Allows text to wrap */
+            white-space: pre-wrap;
         }
 
-        /* --- Input Line Styles --- */
-        .input-line {
-            display: flex;
-            align-items: center;
-        }
-
-        .prompt {
-            margin-right: 10px;
-        }
+        .input-line { display: flex; align-items: center; }
+        .prompt { margin-right: 10px; }
 
         #command-input {
-            background: none;
-            border: none;
-            color: #00ff00;
-            font-family: inherit;
-            font-size: inherit;
-            outline: none;
-            width: 100%;
+            background: none; border: none; color: #00ff00;
+            font-family: inherit; font-size: inherit; outline: none; width: 100%;
         }
 
-        /* --- Blinking Cursor --- */
-        #command-input:focus {
-            animation: blink 1s step-end infinite;
-        }
+        #command-input:focus { animation: blink 1s step-end infinite; }
 
         @keyframes blink {
             from, to { border-right: 2px solid #00ff00; }
@@ -59,9 +44,12 @@
 <body>
 
     <div id="terminal">
-        <div class="output-line">Welcome to Azeem's Interactive Terminal.</div>
-        <div class="output-line">Type 'help' to see the list of available commands.</div>
-        <div class="output-line">----------------------------------------------------</div>
+        <div id="header">
+            <div class="output-line">Welcome to Azeem's Interactive Terminal.</div>
+            <div class="output-line">Type 'help' to see the list of available commands.</div>
+            <div class="output-line">----------------------------------------------------</div>
+        </div>
+        <div id="command-history"></div>
     </div>
     
     <div class="input-line">
@@ -70,17 +58,18 @@
     </div>
 
     <script>
-        const terminalOutput = document.getElementById('terminal');
+        // We now get a reference to the new command-history div
+        const commandHistory = document.getElementById('command-history');
         const commandInput = document.getElementById('command-input');
 
-        // --- EDIT YOUR COMMANDS AND OUTPUTS HERE ---
+        // --- EDIT YOUR COMMANDS AND OUTPUTS HERE (No changes needed here) ---
         const commands = {
             help: `
 Available commands:
   about    - Who is Azeem?
   projects - View my work
   socials  - My social media links
-  clear    - Clear the terminal
+  clear    - Clear the command history
             `,
             about: "I'm Azeem, a passionate developer interested in Python, Linux, and cybersecurity. I love building cool things and learning new technologies.",
             projects: `
@@ -91,28 +80,30 @@ My Projects:
             `,
             socials: `
 You can find me here:
-  GitHub:   https://github.com/Phoenix577  <-- I've updated this for you!
+  GitHub:   https://github.com/Phoenix577
   LinkedIn: https://linkedin.com/in/your-profile
   Twitter:  https://twitter.com/your-handle
             `
         };
 
-        // --- CORE LOGIC (No need to edit below this line) ---
+        // --- CORE LOGIC (Updated to be cleaner) ---
         commandInput.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 const command = commandInput.value.trim().toLowerCase();
                 const currentLine = `<div class="output-line"><span class="prompt">></span> ${command}</div>`;
                 
-                terminalOutput.innerHTML += currentLine;
+                // Now we only add history to the command-history div
+                commandHistory.innerHTML += currentLine;
 
-                if (command in commands) {
+                if (command === 'clear') {
+                    // The clear command now only clears the history, not the header
+                    commandHistory.innerHTML = '';
+                } else if (command in commands) {
                     const output = `<div class="output-line">${commands[command]}</div>`;
-                    terminalOutput.innerHTML += output;
-                } else if (command === 'clear') {
-                    terminalOutput.innerHTML = `<div class="output-line">Terminal cleared. Type 'help' for commands.</div>`;
+                    commandHistory.innerHTML += output;
                 } else {
                     const error = `<div class="output-line">Command not found: ${command}. Type 'help' for a list of commands.</div>`;
-                    terminalOutput.innerHTML += error;
+                    commandHistory.innerHTML += error;
                 }
 
                 commandInput.value = '';
