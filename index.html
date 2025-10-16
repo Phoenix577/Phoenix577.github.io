@@ -5,113 +5,202 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azeem's Terminal</title>
     <style>
-        /* --- Basic Styles (No changes here) --- */
+        :root {
+            --background: #1a1a1a;
+            --foreground: #00ff00;
+            --prompt: #50fa7b;
+            --links: #8be9fd;
+        }
         body {
-            background-color: #1a1a1a;
-            color: #00ff00;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.5;
             margin: 0;
-            padding: 20px;
+            padding: 1rem;
         }
-
         #terminal {
-            height: 100vh;
-            overflow-y: auto;
-            padding-bottom: 50px;
+            width: 100%;
+            height: 100%;
         }
-
-        .output-line {
+        .line {
             white-space: pre-wrap;
+            word-break: break-all;
         }
-
-        .input-line { display: flex; align-items: center; }
-        .prompt { margin-right: 10px; }
-
-        #command-input {
-            background: none; border: none; color: #00ff00;
-            font-family: inherit; font-size: inherit; outline: none; width: 100%;
+        .prompt {
+            color: var(--prompt);
         }
-
-        #command-input:focus { animation: blink 1s step-end infinite; }
-
+        .cursor {
+            display: inline-block;
+            width: 0.6rem;
+            height: 1.2rem;
+            background-color: var(--foreground);
+            animation: blink 1s steps(1) infinite;
+            vertical-align: middle;
+        }
         @keyframes blink {
-            from, to { border-right: 2px solid #00ff00; }
-            50% { border-right: 2px solid transparent; }
+            50% { background-color: transparent; }
+        }
+        a {
+            color: var(--links);
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="terminal">
-        <div id="header">
-            <div class="output-line">Welcome to Azeem's Interactive Terminal.</div>
-            <div class="output-line">Type 'help' to see the list of available commands.</div>
-            <div class="output-line">----------------------------------------------------</div>
-        </div>
-        <div id="command-history"></div>
-    </div>
-    
-    <div class="input-line">
-        <span class="prompt">></span>
-        <input type="text" id="command-input" autofocus autocomplete="off">
-    </div>
+    <div id="terminal"></div>
 
     <script>
-        // We now get a reference to the new command-history div
-        const commandHistory = document.getElementById('command-history');
-        const commandInput = document.getElementById('command-input');
+        const terminal = document.getElementById('terminal');
+        let commandHistory = [];
+        let historyIndex = 0;
+        let currentLine;
 
-        // --- EDIT YOUR COMMANDS AND OUTPUTS HERE (No changes needed here) ---
+        // --- EDIT YOUR INFO AND COMMANDS HERE ---
+        const welcomeBanner = `
+  █████╗ ███████╗███████╗███████╗███╗   ███╗
+ ██╔══██╗╚══███╔╝██╔════╝██╔════╝████╗ ████║
+ ███████║  ███╔╝ █████╗  █████╗  ██╔████╔██║
+ ██╔══██║ ███╔╝  ██╔══╝  ██╔══╝  ██║╚██╔╝██║
+ ██║  ██║███████╗███████╗███████╗██║ ╚═╝ ██║
+ ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝
+
+  Welcome to Azeem's Interactive Terminal.
+  Type 'help' for a list of available commands.
+`;
+
         const commands = {
             help: `
-Available commands:
-  about    - Who is Azeem?
-  projects - View my work
-  socials  - My social media links
-  clear    - Clear the command history
+  <span class="prompt">Available commands:</span>
+    about&nbsp;&nbsp;&nbsp;&nbsp;- Who is Azeem?
+    skills&nbsp;&nbsp;&nbsp;- View my technical skills
+    projects&nbsp;- See my work
+    socials&nbsp;&nbsp;- My social media links
+    theme&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Change the terminal theme
+    clear&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Clear the command history
             `,
             about: "I'm Azeem, a passionate developer interested in Python, Linux, and cybersecurity. I love building cool things and learning new technologies.",
+            
+            // I've added this new 'skills' command for you!
+            skills: `
+  <span class="prompt">My Tech Stack:</span>
+    Languages: &nbsp;Python, JavaScript, HTML/CSS, SQL
+    Systems: &nbsp;&nbsp;&nbsp;&nbsp;Arch Linux, Windows
+    Tools: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Git, Docker, Bash Scripting
+    Interests: &nbsp;Cybersecurity, Data Structures, System Admin
+            `,
+
             projects: `
-My Projects:
-  1. Project Alpha - A data analysis tool built with Python. [link]
-  2. Cool Website  - A portfolio website for a client. [link]
-  (You can add links here!)
+  <span class="prompt">My Projects:</span>
+    1. <a href="#" target="_blank">Terminal Portfolio</a> - This interactive terminal website. (Built with Vanilla JS)
+    2. <a href="#" target="_blank">Your Next Project</a> - Describe your awesome project here!
+    (Replace the # above with your actual project links!)
             `,
             socials: `
-You can find me here:
-  GitHub:   https://github.com/Phoenix577
-  LinkedIn: https://linkedin.com/in/your-profile
-  Twitter:  https://twitter.com/your-handle
-            `
+  <span class="prompt">Find me here:</span>
+    GitHub: &nbsp;&nbsp;&nbsp;<a href="https://github.com/Phoenix577" target="_blank">github.com/Phoenix577</a>
+    LinkedIn: &nbsp;<a href="#" target="_blank">linkedin.com/in/your-profile-here</a>
+    (Replace the # and text for your LinkedIn profile!)
+            `,
+            theme: (args) => {
+                if (args.length === 0) return "Usage: theme <theme_name>. Try 'matrix', 'dracula', or 'light'.";
+                const themeName = args[0].toLowerCase();
+                const root = document.documentElement;
+                switch(themeName) {
+                    case 'matrix':
+                        root.style.setProperty('--background', '#000000');
+                        root.style.setProperty('--foreground', '#00ff00');
+                        return 'Theme changed to Matrix.';
+                    case 'dracula':
+                        root.style.setProperty('--background', '#282a36');
+                        root.style.setProperty('--foreground', '#f8f8f2');
+                        return 'Theme changed to Dracula.';
+                    case 'light':
+                        root.style.setProperty('--background', '#f8f8f2');
+                        root.style.setProperty('--foreground', '#282a36');
+                        return 'Theme changed to Light.';
+                    default:
+                        return `Theme '${themeName}' not found.`;
+                }
+            }
         };
 
-        // --- CORE LOGIC (Updated to be cleaner) ---
-        commandInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                const command = commandInput.value.trim().toLowerCase();
-                const currentLine = `<div class="output-line"><span class="prompt">></span> ${command}</div>`;
-                
-                // Now we only add history to the command-history div
-                commandHistory.innerHTML += currentLine;
+        // --- CORE LOGIC (Best not to edit below here) ---
+        function createLine(text = '') {
+            const line = document.createElement('div');
+            line.className = 'line';
+            line.innerHTML = text;
+            terminal.appendChild(line);
+            return line;
+        }
 
-                if (command === 'clear') {
-                    // The clear command now only clears the history, not the header
-                    commandHistory.innerHTML = '';
-                } else if (command in commands) {
-                    const output = `<div class="output-line">${commands[command]}</div>`;
-                    commandHistory.innerHTML += output;
-                } else {
-                    const error = `<div class="output-line">Command not found: ${command}. Type 'help' for a list of commands.</div>`;
-                    commandHistory.innerHTML += error;
-                }
+        function createInputLine() {
+            currentLine = createLine('<span class="prompt">azeem@portfolio:~$</span> <span class="command"></span><span class="cursor"></span>');
+            return currentLine;
+        }
 
-                commandInput.value = '';
-                window.scrollTo(0, document.body.scrollHeight);
+        function processCommand(cmdText) {
+            commandHistory.push(cmdText);
+            historyIndex = commandHistory.length;
+
+            const [cmd, ...args] = cmdText.split(' ').filter(Boolean); // Filter out empty strings
+            
+            if (cmd === 'clear') {
+                // This is the FIX: It redraws the banner instead of wiping everything
+                terminal.innerHTML = '';
+                createLine(welcomeBanner);
+                return;
             }
+            
+            if (commands[cmd]) {
+                const output = commands[cmd];
+                if (typeof output === 'function') {
+                    createLine(output(args));
+                } else {
+                    createLine(output);
+                }
+            } else if (cmd) { // Only show error if a command was actually typed
+                createLine(`Command not found: ${cmd}. Type 'help' for assistance.`);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const commandSpan = currentLine.querySelector('.command');
+                const cmdText = commandSpan.textContent;
+                currentLine.querySelector('.cursor').remove(); // Freeze the line
+                processCommand(cmdText);
+                createInputLine();
+            } else if (e.key === 'Backspace') {
+                const commandSpan = currentLine.querySelector('.command');
+                commandSpan.textContent = commandSpan.textContent.slice(0, -1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    currentLine.querySelector('.command').textContent = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    currentLine.querySelector('.command').textContent = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    currentLine.querySelector('.command').textContent = '';
+                }
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) { // Handle printable characters
+                const commandSpan = currentLine.querySelector('.command');
+                commandSpan.textContent += e.key;
+            }
+            terminal.scrollTop = terminal.scrollHeight; // Auto-scroll
         });
 
-        document.body.addEventListener('click', () => commandInput.focus());
+        // Initial setup
+        createLine(welcomeBanner);
+        createInputLine();
     </script>
 </body>
 </html>
